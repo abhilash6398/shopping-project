@@ -1,8 +1,8 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { stringify } from '@angular/compiler/src/util';
 import { Injectable } from '@angular/core';
-import { Subject, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { BehaviorSubject, throwError } from 'rxjs';
+import { catchError, tap } from 'rxjs/operators';
+import { User } from './user.model';
 
 export interface AuthResponseData {
   kind: string;
@@ -18,7 +18,8 @@ export interface AuthResponseData {
   providedIn: 'root'
 })
 export class AuthService {
-  user = new Subject<User>();
+  user = new BehaviorSubject<User>(null);
+  token: string=null;
 
   constructor(private http: HttpClient) { }
 
@@ -28,7 +29,12 @@ export class AuthService {
       email: email,
       password: password,
       returnSecureToken: true
-    }).pipe(catchError());
+    }).pipe(catchError(this.handleError),tap(resData=>{
+      // const expirationDate=new Date(new Date().getTime() + +resData.expiresIn*1000);
+      // const user = new User(resData.email,resData.localId,resData.idToken,expirationDate);
+      // this.user.next(user);
+      this.handleAuthentication(resData.email,resData.localId,resData.idToken,+resData.expiresIn)
+    }));
   }
 
   login(email: string,password: string){
@@ -37,7 +43,12 @@ export class AuthService {
       email: email,
       password: password,
       returnSecureToken: true
-    });
+    }).pipe(catchError(this.handleError),tap(resData=>{
+      // const expirationDate=new Date(new Date().getTime() + +resData.expiresIn*1000);
+      // const user = new User(resData.email,resData.localId,resData.idToken,expirationDate);
+      // this.user.next(user);
+      this.handleAuthentication(resData.email,resData.localId,resData.idToken,+resData.expiresIn)
+    }));
   }
 
   private handleAuthentication(
@@ -46,7 +57,7 @@ export class AuthService {
     token: string,
     expiresIn: number
   ) {
-    const expirationDate= new Date(new Date().getTime()+expiresIn*1000);
+    const expirationDate= new Date(new Date().getTime() + expiresIn*1000);
     const user= new User(email,userId,token,expirationDate);
     this.user.next(user);
 
