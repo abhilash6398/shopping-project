@@ -59,6 +59,10 @@ import { PlaceholderComponent } from './shared/placeholder/placeholder.component
       multi: true
     }
   ],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
+  entryComponents:[
+    AlertComponent,
+
+  ]
 })
 export class AppModule {}
